@@ -1,0 +1,98 @@
+macro "Fixed Length Line Tool [f1]" {
+	var desiredLength = 30; //in scaled units
+	var isMaxlength = false; //not fixed, only maximum line length
+	var isCentered = true;
+	
+	leftClick = 16;
+	shift = 1;
+	getPixelSize(unit, pixelWidth, pixelHeight);
+	getCursorLoc(x0, y0, z, flags);
+	lastX = x0;
+	lastY = y0;
+	dx = (x0);
+	dy = (y0);
+	dxs = dx * pixelWidth;       //in scaled units
+	dys = dy * pixelHeight;
+	length = sqrt(dxs*dxs + dys*dys);
+	if (isCentered)
+		length = 2*length;
+	enlageFactor = desiredLength/length;
+	if (isMaxlength && enlageFactor > 1)
+		enlageFactor = 1;
+	if (isCentered) {
+		xS = x0 - dx*enlageFactor;
+		yS = y0 - dy*enlageFactor;
+	} else {
+		xS = x0;
+		yS = y0;
+	}
+	x = x0 + dx*enlageFactor;
+	y = y0 + dy*enlageFactor;
+	makeLine(xS, yS, x, y);
+}
+
+macro "Send To Excel [f2]" {
+	//====================================
+	// Macro that appends the data from the "Analyze --> Plot Profile" tool 
+	// to an excel file in the same directory as the current image
+	// Requires the "Read and Write Excel" Plugin :
+		// Update Site :
+		// https://sites.imagej.net/ResultsToExcel/
+	// Links :
+	// https://imagej.net/Read_and_Write_Excel
+	// https://imagej.github.io/plugins/read-and-write-excel
+	// https://github.com/bkromhout/Read_and_Write_Excel_Modified
+	//
+	// An line tool macro is very useful, such as :
+	// https://wsr.imagej.net/plugins/Tools/Fixed_Length_Line_Tool.ijm
+	//====================================
+	
+	// get the results
+	run("Clear Results");
+	getLine(x1, y1, x2, y2, lineWidth);
+	if (x1==-1)
+		exit("This macro requires a straight line selection");
+	run("Plot Profile");
+	Plot.getValues(xpoints, ypoints);
+	run("Close");
+	
+	// Copy data to the results window for the read and write excel fct
+	// Substract half of the length to center the distance around the middle of the line
+	getPixelSize(unit, pw, ph);
+	x1*=pw; y1*=ph; x2*=pw; y2*=ph;
+	dx = x2-x1; dy = y2-y1;
+	length = sqrt(dx*dx+dy*dy); // length of the measuring line
+	for (i=0; i<xpoints.length; i++)
+		setResult("Distance", i, xpoints[i]-(length/2));
+		for (i=0; i<ypoints.length; i++)
+		setResult("Value", i, ypoints[i]);
+
+	// Same path and name_DATA as the current image
+	excel = ".xlsx";
+	txt = "_DATA";
+	path = getInfo("image.directory");
+	title = getTitleStripExtension();
+	title = title + txt + excel;
+	file = path + title; // String to give to read and write excel fct
+
+	// Adds the data to the the excel file defined as "file" above
+	run("Read and Write Excel", "no_count_column file="+file);
+
+	
+	//====================================
+	// Use this function to strip any number of extensions
+	// off images.
+	// Returns the title without the extension.
+	// Auther : Michael Cammer
+	//====================================
+	function getTitleStripExtension() {
+	  t = getInfo("image.filename");
+	  t = replace(t, ".tif", "");        
+	  t = replace(t, ".tiff", "");      
+	  t = replace(t, ".lif", "");      
+	  t = replace(t, ".lsm", "");    
+	  t = replace(t, ".czi", "");      
+	  t = replace(t, ".nd2", "");    
+	  return t;
+	}
+}
