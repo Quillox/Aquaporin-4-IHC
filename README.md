@@ -9,6 +9,6 @@ than wild type mice. This finding may be a good starting point for further studi
 involving the glymphatic system and its relationship with the circadian rhythm.
 
 ## Contents
-This repository contains data from fluorescent mucroscopy and the releveant scripts for its processing and analysis.
+This repository contains data from fluorescent microscopy and the relevant scripts for its processing and analysis.
 
 The notebook has a few examples for using the functions.
